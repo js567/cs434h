@@ -47,6 +47,7 @@ class NearestNeighbor:
 ######################################################################
     def get_nearest_neighbors(self,query,k):
         # TODO
+        idx_of_nearest = 0
         return idx_of_nearest  
     
 
@@ -71,6 +72,7 @@ class NearestNeighbor:
 ######################################################################
     def classify(self, query, k):
         # TODO
+        predicted_label = ""
         return predicted_label
 
 
