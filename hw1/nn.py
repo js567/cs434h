@@ -1,3 +1,4 @@
+from collections import Counter
 import numpy as np
 
 class NearestNeighbor:
@@ -21,10 +22,8 @@ class NearestNeighbor:
 #                       neighbors of the query point
 ######################################################################
     def __init__(self, train_X, train_Y) -> None:
-        #TODO
         self.train_X = train_X
         self.train_Y = train_Y
-        # pass
 
 
 ######################################################################
@@ -85,30 +84,36 @@ class NearestNeighbor:
 #                        class of the query based on the neighbors
 ######################################################################
     def classify(self, query, k):
-        # TODO
-        examples_X = self.train_X
+
         examples_Y = self.train_Y
 
         nn = self.get_nearest_neighbors(query, k)
         # print(nn)
 
-        sum_zeros = 0
-        sum_ones = 0
+        # print(examples_Y[nn])
 
-        for neighbor in range(len(nn)):
-            # print(examples_Y[nn][neighbor])
-            if examples_Y[nn][neighbor] == 0:
-                sum_zeros += 1
-            else: 
-                sum_ones += 1
-
-        # print(sum_ones)
-        # print(sum_zeros)
-
-        if sum_ones > sum_zeros:
-            predicted_label = 1
-        else:
+        n_zeros = np.count_nonzero(examples_Y[nn]==0)
+        if n_zeros > len(nn) / 2:
             predicted_label = 0
+        else:
+            predicted_label = 1
+        #     print("zeros")
+        # print(n_zeros)
+
+        # sum_zeros = 0
+        # sum_ones = 0
+
+        # for neighbor in range(len(nn)):
+        #     # print(examples_Y[nn][neighbor])
+        #     if examples_Y[nn][neighbor] == 0:
+        #         sum_zeros += 1
+        #     else: 
+        #         sum_ones += 1
+
+        # if sum_ones > sum_zeros:
+        #     predicted_label = 1
+        # else:
+        #     predicted_label = 0
 
         # print("predicted_label: " + str(predicted_label))
         return predicted_label
@@ -132,6 +137,12 @@ class NearestNeighbor:
         for query_idx in range(queries_X.shape[0]):
             predicted_y.append([self.classify(queries_X[query_idx], k)])
 
-        # print(predicted_y)
-        # return np.zeros(len(queries_X))
         return predicted_y
+
+
+#######
+# train function to allow interoperation with rplsh
+#######
+
+    def train(self, data1, data2):
+        pass

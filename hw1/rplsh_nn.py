@@ -25,8 +25,10 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     #   None
     ######################################################################
     def __init__(self, train_X, train_Y, num_projections, num_hash_tables) -> None:
-        # TODO
-        pass
+        self.train_X = train_X
+        self.train_Y = train_Y
+        self.num_projections = num_projections
+        self.num_hash_tables = num_hash_tables
 
 
     ######################################################################

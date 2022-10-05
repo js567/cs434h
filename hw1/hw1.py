@@ -7,7 +7,7 @@ import rplsh_nn
 def main(training_file,test_file,mode):
   sanity_check(training_file,test_file,mode)
   # Commented out cross validation for testing
-  # run_cross_validation_test(training_file,test_file,mode)
+  run_cross_validation_test(training_file,test_file,mode)
 
 ######################################################################
 # sanity_check
@@ -24,7 +24,7 @@ def main(training_file,test_file,mode):
 # Output:
 #   None 
 ######################################################################
-def sanity_check(training_file,test_file,mode):
+def sanity_check(training_file, test_file, mode):
    
   #############################################################
   # These first bits are just to help you develop your code
@@ -112,9 +112,11 @@ def sanity_check(training_file,test_file,mode):
 # Output:
 #   None but will save the predictions to a file
 ######################################################################
-def run_cross_validation_test(training_file,test_file,mode):
+def run_cross_validation_test(training_file, test_file,mode):
   # Load training and test data as numpy matrices 
   traindata = np.genfromtxt(training_file, delimiter=',')[1:, 1:]
+  # train_X = traindata[:, :100]
+  # train_Y = traindata[:, :100]
   train_X = traindata[:, :-1]
   train_Y = traindata[:, -1]
   train_Y = train_Y[:,np.newaxis]
@@ -131,11 +133,12 @@ def run_cross_validation_test(training_file,test_file,mode):
   ####################################################################
   # Search over possible settings of k
   print("Performing 4-fold cross validation")
-  for k in [1,3,5,7,9,99,999,8000]:
+  for k in [1,3,5,7,9,99]:#,999,8000]:
     t0 = time.time()
 
     # TODO Compute train accuracy using whole set
-    train_acc = 0
+    predicted_labels = classifier.classify_dataset(train_X, k)
+    train_acc = compute_accuracy(predicted_labels, train_Y)
 
     # TODO Compute 4-fold cross validation accuracy
     val_acc, val_acc_var = 0, 0
@@ -147,7 +150,7 @@ def run_cross_validation_test(training_file,test_file,mode):
   best_k = 99
 
   # Make predictions on test set
-  classifier.train(train_X,train_Y)
+  classifier.train(train_X, train_Y) #WHAT DOES THIS MEAN????
   pred_test_y = classifier.classify_dataset(test_X, best_k)    
     
   # add index and header then save to file
@@ -173,7 +176,7 @@ def run_cross_validation_test(training_file,test_file,mode):
 #   avg_val_acc --      the average validation accuracy across the folds
 #   varr_val_acc --      the variance of validation accuracy across the folds
 ######################################################################
-def cross_validation(classifier,train_X, train_Y, num_folds=4, k=1):
+def cross_validation(classifier, train_X, train_Y, num_folds=4, k=1):
   # TODO
   return(avg_val_acc, varr_val_acc) #original line had: return avg_val_acc, varr_val_acc)
 
