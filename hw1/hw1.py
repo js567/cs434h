@@ -6,7 +6,8 @@ import rplsh_nn
 
 def main(training_file,test_file,mode):
   sanity_check(training_file,test_file,mode)
-  run_cross_validation_test(training_file,test_file,mode)
+  # Commented out cross validation for testing
+  # run_cross_validation_test(training_file,test_file,mode)
 
 ######################################################################
 # sanity_check
@@ -42,7 +43,9 @@ def sanity_check(training_file,test_file,mode):
     
   for i in range(len(example_train_x)):
     assert([i] == classifier.get_nearest_neighbors(example_train_x[i], 1))
-        
+
+  print("Passed Sanity Check 1")
+
   #########
   # Sanity Check 2: See if neighbors are right for some examples (ignoring order)
   nn_idx = classifier.get_nearest_neighbors(np.array( [ 1, 4, 2] ), 2)
@@ -54,6 +57,8 @@ def sanity_check(training_file,test_file,mode):
   nn_idx = classifier.get_nearest_neighbors(np.array( [ 10, 40, 20] ), 5)
   assert(set(nn_idx).difference(set([4, 3, 0, 2, 1]))==set())
 
+  print("Passed Sanity Check 2")
+
   #########
   # Sanity Check 3: Neighbors for increasing k should be subsets
   query = np.array( [ 10, 40, 20] )
@@ -62,12 +67,16 @@ def sanity_check(training_file,test_file,mode):
     nn_idx = classifier.get_nearest_neighbors(query, k)
     assert(set(p_nn_idx).issubset(nn_idx))
     p_nn_idx = nn_idx
+
+  print("Passed Sanity Check 3.0")
    
   #########
   # Test out our prediction code
   queries = np.array( [[ 10, 40, 20], [-2, 0, 5], [0,0,0]] )
   pred = classifier.classify_dataset(queries, 3)
   assert( np.all(pred == np.array([[0],[1],[0]])))
+
+  print("Passed Sanity Check 3.1")
 
   #########
   # Test our our accuracy code
@@ -77,6 +86,8 @@ def sanity_check(training_file,test_file,mode):
 
   pred_y = np.array([[5],[1],[2],[0],[1],[0]])                    
   assert( compute_accuracy(true_y, pred_y) == 4/6)
+
+  print("Passed Sanity Check 3.2")
 
 ######################################################################
 # run_cross_validation_test

@@ -22,7 +22,9 @@ class NearestNeighbor:
 ######################################################################
     def __init__(self, train_X, train_Y) -> None:
         #TODO
-        pass
+        self.train_X = train_X
+        self.train_Y = train_Y
+        # pass
 
 
 ######################################################################
@@ -45,9 +47,21 @@ class NearestNeighbor:
 #   idx_of_nearest --   a k-by-1 list of indices for the nearest k
 #                       neighbors of the query point
 ######################################################################
-    def get_nearest_neighbors(self,query,k):
-        # TODO
-        idx_of_nearest = 0
+    def get_nearest_neighbors(self, query, k):
+
+        adjusted_matrix = self.train_X - query
+        length_array = []
+
+        for row in range(adjusted_matrix.shape[0]):
+            length_array.append((np.linalg.norm(adjusted_matrix[row]), row))
+
+        sorted_length_array = sorted(length_array, key=lambda tup: tup[0])
+
+        idx_of_nearest = []
+
+        for neighbor in range(k):
+            idx_of_nearest.append(sorted_length_array[neighbor][1])
+
         return idx_of_nearest  
     
 
@@ -72,7 +86,7 @@ class NearestNeighbor:
 ######################################################################
     def classify(self, query, k):
         # TODO
-        predicted_label = ""
+        predicted_label = 0
         return predicted_label
 
 
@@ -89,4 +103,4 @@ class NearestNeighbor:
 ######################################################################
     def classify_dataset(self, queries_X, k): 
      # TODO
-     return np.zeroes(len(queries_X))
+     return np.zeros(len(queries_X))
