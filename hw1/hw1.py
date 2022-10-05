@@ -44,6 +44,9 @@ def sanity_check(training_file,test_file,mode):
   for i in range(len(example_train_x)):
     assert([i] == classifier.get_nearest_neighbors(example_train_x[i], 1))
 
+  # for i in range(len(example_train_x)):
+  #   print(classifier.get_nearest_neighbors(example_train_x[i], 3))
+
   print("Passed Sanity Check 1")
 
   #########
@@ -73,6 +76,12 @@ def sanity_check(training_file,test_file,mode):
   #########
   # Test out our prediction code
   queries = np.array( [[ 10, 40, 20], [-2, 0, 5], [0,0,0]] )
+  # print(str(classifier.get_nearest_neighbors([10, 40, 20], 3)))
+  # print(str(classifier.get_nearest_neighbors([-2, 0, 5], 3)))
+  # print(str(classifier.get_nearest_neighbors([0, 0, 0], 3)))
+
+  # print("\n")
+
   pred = classifier.classify_dataset(queries, 3)
   assert( np.all(pred == np.array([[0],[1],[0]])))
 

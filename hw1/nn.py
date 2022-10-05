@@ -86,7 +86,31 @@ class NearestNeighbor:
 ######################################################################
     def classify(self, query, k):
         # TODO
-        predicted_label = 0
+        examples_X = self.train_X
+        examples_Y = self.train_Y
+
+        nn = self.get_nearest_neighbors(query, k)
+        # print(nn)
+
+        sum_zeros = 0
+        sum_ones = 0
+
+        for neighbor in range(len(nn)):
+            # print(examples_Y[nn][neighbor])
+            if examples_Y[nn][neighbor] == 0:
+                sum_zeros += 1
+            else: 
+                sum_ones += 1
+
+        # print(sum_ones)
+        # print(sum_zeros)
+
+        if sum_ones > sum_zeros:
+            predicted_label = 1
+        else:
+            predicted_label = 0
+
+        # print("predicted_label: " + str(predicted_label))
         return predicted_label
 
 
@@ -102,5 +126,12 @@ class NearestNeighbor:
 #   predicted_y --   a m-by-1 vector of predicted class labels
 ######################################################################
     def classify_dataset(self, queries_X, k): 
-     # TODO
-     return np.zeros(len(queries_X))
+
+        predicted_y = []
+
+        for query_idx in range(queries_X.shape[0]):
+            predicted_y.append([self.classify(queries_X[query_idx], k)])
+
+        # print(predicted_y)
+        # return np.zeros(len(queries_X))
+        return predicted_y
