@@ -3,6 +3,7 @@ import sys
 import time
 import nn
 import rplsh_nn
+import multiprocessing
 
 def main(training_file,test_file,mode):
   sanity_check(training_file,test_file,mode)
@@ -133,21 +134,36 @@ def run_cross_validation_test(training_file, test_file,mode):
   ####################################################################
   # Search over possible settings of k
   print("Performing 4-fold cross validation")
-  for k in [1,3,5,7,9,99]:#,999,8000]:
+
+  k_selection_set = []
+
+  for k in [1,3,5,7,9]:#,99]:#,999,8000]:
     t0 = time.time()
 
-    # TODO Compute train accuracy using whole set
-    predicted_labels = classifier.classify_dataset(train_X, k)
-    train_acc = compute_accuracy(predicted_labels, train_Y)
+    # Compute train accuracy using whole set
+    # print("shape")
+    # print(train_X.shape[0])
 
-    # TODO Compute 4-fold cross validation accuracy
-    val_acc, val_acc_var = 0, 0
+    predicted_labels = classifier.classify_dataset(train_X[:100], k)
+    train_acc = compute_accuracy(predicted_labels[:100], train_Y)
+
+    # Compute 4-fold cross validation accuracy
+    val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
         
     t1 = time.time()
     print("k = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(k, train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
+
+    k_selection_set.append((val_acc, k))
       
   # TODO set your best k value and then run on the test set
-  best_k = 99
+  # SHOULD CALCULATE THIS BASED OFF OF VALIDATION ACCURACY PROBABLY
+  # How should we interpret variance in this situation?
+
+  # Sort k values by best validation accuracy - maybe add an arbitrary variance cutoff point?
+  sorted_k_selection_set = sorted(k_selection_set, key=lambda tup: tup[0], reverse=True)
+  best_k = sorted_k_selection_set[0][1]
+
+  print("Best K: " + str(best_k))
 
   # Make predictions on test set
   classifier.train(train_X, train_Y) #WHAT DOES THIS MEAN????
@@ -176,9 +192,53 @@ def run_cross_validation_test(training_file, test_file,mode):
 #   avg_val_acc --      the average validation accuracy across the folds
 #   varr_val_acc --      the variance of validation accuracy across the folds
 ######################################################################
-def cross_validation(classifier, train_X, train_Y, num_folds=4, k=1):
-  # TODO
-  return(avg_val_acc, varr_val_acc) #original line had: return avg_val_acc, varr_val_acc)
+def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
+
+  # Split train_X and train_Y into K folds for computation
+  # TODO - CONVERT THIS IN TERMS OF NUM_FOLDS FOR CONTINUITY
+  split_X = np.split(train_X, [1999, 3999, 5999])
+  split_Y = np.split(train_Y, [1999, 3999, 5999])
+
+  # avg_val_acc = 0
+  accuracy_array = []
+
+  for i in range(num_folds):
+
+    # Test - 1/4 of dataset
+    fold_test_X = split_X[i]
+    fold_test_Y = split_Y[i]
+
+    # Create 3/4 X dataset
+    fold_train_X_uncombined = np.delete(split_X, i)
+    fold_train_X_combined = np.vstack(fold_train_X_uncombined)
+
+    # Create 3/4 Y labels
+    fold_train_Y_uncombined = np.delete(split_Y, i)
+    fold_train_Y_combined = np.vstack(fold_train_Y_uncombined)
+
+    # Create new classifier trained on each small set of data
+    if( mode == "0" ):
+      fold_classifier = nn.NearestNeighbor(fold_train_X_combined, fold_train_Y_combined)
+    elif (mode == "1"):
+      fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined,4,2)
+
+    # Train classifier if necessary - RPLSH only
+    fold_classifier.train(fold_train_X_combined, fold_train_Y_combined) #WHAT DOES THIS MEAN????
+
+    # Predict from fold test set
+    fold_pred = fold_classifier.classify_dataset(fold_test_X, k)  
+    fold_acc = compute_accuracy(fold_pred, fold_test_Y)
+
+    # Add accuracy result to array to compute mean and variance
+    accuracy_array.append(fold_acc)
+
+  # Calculate mean and variance from accuracy array
+  avg_val_acc = np.average(accuracy_array)
+  varr_val_acc = np.var(accuracy_array)
+
+  print("k-fold accuracies: " + str(accuracy_array))
+
+  return(avg_val_acc, varr_val_acc)
 
 
 ##################################################################

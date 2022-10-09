@@ -1,5 +1,5 @@
-from collections import Counter
 import numpy as np
+import time
 
 class NearestNeighbor:
     'K-Nearest Neighbor classifier'
@@ -48,19 +48,51 @@ class NearestNeighbor:
 ######################################################################
     def get_nearest_neighbors(self, query, k):
 
+        time0 = time.time()
+
+        # Broadcasting operation - find difference between query and all rows
+        timec = time.time()
         adjusted_matrix = self.train_X - query
+        timed = time.time()
+        # print("broadcast: " + str(timed-timec))
+
+        # timecc = time.time()
         length_array = []
+        # timedd = time.time()
+        # print("create array: " + str(timedd - timecc))
+
+        # Find vector norm for all entries in adjusted matrix
+        # sorted_length_array = [0] * 20
+
+        timee = time.time()
 
         for row in range(adjusted_matrix.shape[0]):
             length_array.append((np.linalg.norm(adjusted_matrix[row]), row))
+            # length = np.linalg.norm(adjusted_matrix[row])
+            # if length > length_array[k-1][0]:
+            #     length_array[k-1] = (length, row)
+            #     length_array = sorted(length_array, key=lambda tup: tup[0])
 
+        # sorted_length_array = length_array
+        # timef = time.time()
+        # print("norm: " + str(timef-timee))
+
+        # timea = time.time()
+        # # Sort vectors by length - room for improvement here?
         sorted_length_array = sorted(length_array, key=lambda tup: tup[0])
+        # timeb = time.time()
+        # print("sorting: " + str(timeb-timea))
 
         idx_of_nearest = []
 
+        timeg = time.time()
         for neighbor in range(k):
             idx_of_nearest.append(sorted_length_array[neighbor][1])
+        timeh = time.time()
+        # print("append: " + str(timeh - timeg))
 
+        time1 = time.time()
+        # print(time1 - time0)
         return idx_of_nearest  
     
 
@@ -85,19 +117,21 @@ class NearestNeighbor:
 ######################################################################
     def classify(self, query, k):
 
-        examples_Y = self.train_Y
+        time0 = time.time()
+
+        # examples_Y = self.train_Y
 
         nn = self.get_nearest_neighbors(query, k)
         # print(nn)
 
         # print(examples_Y[nn])
 
-        n_zeros = np.count_nonzero(examples_Y[nn]==0)
+        n_zeros = np.count_nonzero(self.train_Y[nn]==0)
         if n_zeros > len(nn) / 2:
             predicted_label = 0
         else:
             predicted_label = 1
-        #     print("zeros")
+            # print("zeros")
         # print(n_zeros)
 
         # sum_zeros = 0
@@ -116,6 +150,10 @@ class NearestNeighbor:
         #     predicted_label = 0
 
         # print("predicted_label: " + str(predicted_label))
+
+        time1 = time.time()
+        # print("classify: " + str(time1 - time0))
+
         return predicted_label
 
 
@@ -146,3 +184,5 @@ class NearestNeighbor:
 
     def train(self, data1, data2):
         pass
+
+    
