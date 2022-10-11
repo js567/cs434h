@@ -3,7 +3,6 @@ import sys
 import time
 import nn
 import rplsh_nn
-import multiprocessing
 
 def main(training_file,test_file,mode):
   sanity_check(training_file,test_file,mode)
@@ -137,15 +136,19 @@ def run_cross_validation_test(training_file, test_file,mode):
 
   k_selection_set = []
 
-  for k in [1,3,5,7,9]:#,99]:#,999,8000]:
+  for k in [1,3,5,7,9,99,999,8000]:
     t0 = time.time()
+
+
+    # if k >= train_X.shape[0]:
+    #   k = train_X.shape[0] - 1
 
     # Compute train accuracy using whole set
     # print("shape")
     # print(train_X.shape[0])
 
-    predicted_labels = classifier.classify_dataset(train_X[:100], k)
-    train_acc = compute_accuracy(predicted_labels[:100], train_Y)
+    predicted_labels = classifier.classify_dataset(train_X, k)
+    train_acc = compute_accuracy(predicted_labels, train_Y)
 
     # Compute 4-fold cross validation accuracy
     val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
@@ -199,7 +202,11 @@ def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
   split_X = np.split(train_X, [1999, 3999, 5999])
   split_Y = np.split(train_Y, [1999, 3999, 5999])
 
-  # avg_val_acc = 0
+  # Adjust our k so that it is compatible with K folds
+  # print(k)
+  k = ((num_folds - 1) * k // num_folds) - 1
+  # print(k)
+
   accuracy_array = []
 
   for i in range(num_folds):

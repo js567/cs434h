@@ -86,8 +86,15 @@ class NearestNeighbor:
         idx_of_nearest = []
 
         timeg = time.time()
-        for neighbor in range(k):
-            idx_of_nearest.append(sorted_length_array[neighbor][1])
+
+        if k == len(sorted_length_array): 
+            # print("LEN" + str(k) + str(len(sorted_length_array)))
+            for item in range(len(sorted_length_array)):
+                idx_of_nearest.append(sorted_length_array[item][1])
+        else:
+            for neighbor in range(k):
+                idx_of_nearest.append(sorted_length_array[neighbor][1])
+
         timeh = time.time()
         # print("append: " + str(timeh - timeg))
 

@@ -30,6 +30,13 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
         self.num_projections = num_projections
         self.num_hash_tables = num_hash_tables
 
+        # Generate hyperplanes when initializing class
+        self.generate_hyperplanes()
+
+
+    def generate_hyperplanes(self):
+        pass
+
 
     ######################################################################
     # get_nearest_neighbors 
