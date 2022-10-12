@@ -1,7 +1,9 @@
 import numpy as np
 import nn
 import rplsh
+import random
 
+# Inherits from NearestNeighbor
 class RPLSHNearestNeighbor(nn.NearestNeighbor):
     'Random Projection Locality Sensitive Hashing Nearest Neighbor Classifier'
 
@@ -30,12 +32,34 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
         self.num_projections = num_projections
         self.num_hash_tables = num_hash_tables
 
-        # Generate hyperplanes when initializing class
+        # Do we need self as an argument here?
+        # Initiallize parent class with super()
+        super().__init__(train_X, train_Y)
+
+        # Create a variable to store the hyperplane vectors
+        # Here, the object known as a 'hyperplane' is a vector normal to the hyperplane
+        #   through the origin. This makes it easy to calculate the dot product later.
+        self.hyperplanes = [] # is this the correct variable type?
         self.generate_hyperplanes()
+
+        rplsh_functions = rplsh.RPLSH(self.hyperplanes)
 
 
     def generate_hyperplanes(self):
-        pass
+        vector_length = (self.train_X.shape[1]) - 1 # Don't want to use index as a variable
+        print("Vector length: " + str(vector_length))
+
+        # Generate i hyperplanes with vector length j
+        for i in range(self.num_projections):
+            new_hyperplane = []
+            for j in range(vector_length):
+                new_hyperplane.append(random.gauss(0, 1))
+            self.hyperplanes.append(new_hyperplane)
+            # print(new_hyperplane)
+
+        self.hyperplanes = np.array(self.hyperplanes)
+
+        # print(self.num_projections)
 
 
     ######################################################################
@@ -58,9 +82,13 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     #   idx_of_nearest --   a k-by-1 list of indices for the nearest k
     #                       neighbors of the query point
     ######################################################################
-    def get_nearest_neighbors(self,query,k):
+    def get_nearest_neighbors(self, query, k):
         # TODO
-        return idx_of_nearest
+        # return idx_of_nearest
+        print("method successfully overridden")
+        print()
+        return [0, 1, 2]
+        pass
         
 if __name__ == '__main__':
     pass

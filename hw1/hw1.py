@@ -76,11 +76,6 @@ def sanity_check(training_file, test_file, mode):
   #########
   # Test out our prediction code
   queries = np.array( [[ 10, 40, 20], [-2, 0, 5], [0,0,0]] )
-  # print(str(classifier.get_nearest_neighbors([10, 40, 20], 3)))
-  # print(str(classifier.get_nearest_neighbors([-2, 0, 5], 3)))
-  # print(str(classifier.get_nearest_neighbors([0, 0, 0], 3)))
-
-  # print("\n")
 
   pred = classifier.classify_dataset(queries, 3)
   assert( np.all(pred == np.array([[0],[1],[0]])))
@@ -169,7 +164,6 @@ def run_cross_validation_test(training_file, test_file,mode):
   print("Best K: " + str(best_k))
 
   # Make predictions on test set
-  classifier.train(train_X, train_Y) #WHAT DOES THIS MEAN????
   pred_test_y = classifier.classify_dataset(test_X, best_k)    
     
   # add index and header then save to file
@@ -228,9 +222,6 @@ def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
       fold_classifier = nn.NearestNeighbor(fold_train_X_combined, fold_train_Y_combined)
     elif (mode == "1"):
       fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined,4,2)
-
-    # Train classifier if necessary - RPLSH only
-    fold_classifier.train(fold_train_X_combined, fold_train_Y_combined) #WHAT DOES THIS MEAN????
 
     # Predict from fold test set
     fold_pred = fold_classifier.classify_dataset(fold_test_X, k)  

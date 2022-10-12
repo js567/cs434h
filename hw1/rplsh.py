@@ -3,6 +3,11 @@ import numpy as np
 class RPLSH:
     'Random Projection Locality Sensitive Hashing class'
 
+    # Need access to the hyperplanes from rplsh_nn
+    def __init__(self, hyperplanes):
+        self.hyperplanes = hyperplanes
+
+
 ######################################################################
 # get_hash_code
 ######################################################################
@@ -15,9 +20,15 @@ class RPLSH:
 # Output:
 #   returns a string representing the hash code for the data instance x
 ######################################################################
-    def get_hash_code(self,x):
-        # TODO
-        return hashcode
+
+    def get_hash_code(self, x):
+        #TODO
+        # 
+
+
+        # return(hashcode)
+
+        pass
 
 ######################################################################
 # hash_dataset

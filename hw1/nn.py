@@ -126,12 +126,7 @@ class NearestNeighbor:
 
         time0 = time.time()
 
-        # examples_Y = self.train_Y
-
         nn = self.get_nearest_neighbors(query, k)
-        # print(nn)
-
-        # print(examples_Y[nn])
 
         n_zeros = np.count_nonzero(self.train_Y[nn]==0)
         if n_zeros > len(nn) / 2:
