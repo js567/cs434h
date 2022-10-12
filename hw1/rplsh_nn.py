@@ -32,35 +32,20 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
         self.num_projections = num_projections
         self.num_hash_tables = num_hash_tables
 
-        # Do we need self as an argument here?
         # Initiallize parent class with super()
         super().__init__(train_X, train_Y)
 
         # Create a variable to store the hyperplane vectors
         # Here, the object known as a 'hyperplane' is a vector normal to the hyperplane
         #   through the origin. This makes it easy to calculate the dot product later.
-        self.hyperplanes = [] # is this the correct variable type?
-        self.generate_hyperplanes()
+        # self.hyperplanes = [] # is this the correct variable type?
+        # self.generate_hyperplanes()
 
-        rplsh_functions = rplsh.RPLSH(self.hyperplanes)
+        self.rplsh_functions = rplsh.RPLSH(train_X, train_Y, num_projections, num_hash_tables) 
 
-
-    def generate_hyperplanes(self):
-        vector_length = (self.train_X.shape[1]) - 1 # Don't want to use index as a variable
-        print("Vector length: " + str(vector_length))
-
-        # Generate i hyperplanes with vector length j
-        for i in range(self.num_projections):
-            new_hyperplane = []
-            for j in range(vector_length):
-                new_hyperplane.append(random.gauss(0, 1))
-            self.hyperplanes.append(new_hyperplane)
-            # print(new_hyperplane)
-
-        self.hyperplanes = np.array(self.hyperplanes)
-
-        # print(self.num_projections)
-
+        self.rplsh_functions.hash_dataset(train_X)
+        # might move hyperplane construction to 
+        # rplsh because of multiple hash tables being constructed
 
     ######################################################################
     # get_nearest_neighbors 
@@ -83,12 +68,13 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     #                       neighbors of the query point
     ######################################################################
     def get_nearest_neighbors(self, query, k):
-        # TODO
-        # return idx_of_nearest
         print("method successfully overridden")
-        print()
-        return [0, 1, 2]
-        pass
+
+        print(self.rplsh_functions.get_hash_entries(query))
+        idx_of_nearest = self.rplsh_functions.get_hash_entries(query)[:k] # for now, will update this
+
+        print("idx_of_nearest = " + str(idx_of_nearest))
+        return idx_of_nearest
         
 if __name__ == '__main__':
     pass

@@ -128,13 +128,13 @@ class NearestNeighbor:
 
         nn = self.get_nearest_neighbors(query, k)
 
+        # Assign the label of the majority of neighbors
         n_zeros = np.count_nonzero(self.train_Y[nn]==0)
+
         if n_zeros > len(nn) / 2:
             predicted_label = 0
         else:
             predicted_label = 1
-            # print("zeros")
-        # print(n_zeros)
 
         # sum_zeros = 0
         # sum_ones = 0

@@ -4,10 +4,9 @@ import time
 import nn
 import rplsh_nn
 
-def main(training_file,test_file,mode):
-  sanity_check(training_file,test_file,mode)
-  # Commented out cross validation for testing
-  run_cross_validation_test(training_file,test_file,mode)
+def main(training_file, test_file, mode):
+  sanity_check(training_file, test_file, mode)
+  run_cross_validation_test(training_file, test_file, mode)
 
 ######################################################################
 # sanity_check
@@ -35,13 +34,16 @@ def sanity_check(training_file, test_file, mode):
   example_train_x = np.array([ [ 1, 0, 2], [3, -2, 4], [5, -2, 4],
                                  [ 4, 2, 1.5], [3.2, np.pi, 2], [-5, 0, 1]])
   example_train_Y = np.array([[0], [1], [1], [1], [0], [1]])
-  classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
+  # classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
+  # Going to run sanity check on RPLSH - should accept same data
+  classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
   
   #########
   # Sanity Check 1: If I query with examples from the training set 
   # and k=1, each point should be its own nearest neighbor
     
   for i in range(len(example_train_x)):
+
     assert([i] == classifier.get_nearest_neighbors(example_train_x[i], 1))
 
   # for i in range(len(example_train_x)):
@@ -107,7 +109,9 @@ def sanity_check(training_file, test_file, mode):
 # Output:
 #   None but will save the predictions to a file
 ######################################################################
+
 def run_cross_validation_test(training_file, test_file,mode):
+
   # Load training and test data as numpy matrices 
   traindata = np.genfromtxt(training_file, delimiter=',')[1:, 1:]
   # train_X = traindata[:, :100]
@@ -118,7 +122,7 @@ def run_cross_validation_test(training_file, test_file,mode):
   if( mode == "0" ):
     classifier = nn.NearestNeighbor(train_X, train_Y)
   elif (mode == "1"):
-    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y,4,2)
+    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 4, 2)
   else:
     sys.exit("mode must be 0 or 1")
   test_X = np.genfromtxt(test_file, delimiter=',')[1:, 1:]
@@ -132,15 +136,8 @@ def run_cross_validation_test(training_file, test_file,mode):
   k_selection_set = []
 
   for k in [1,3,5,7,9,99,999,8000]:
+
     t0 = time.time()
-
-
-    # if k >= train_X.shape[0]:
-    #   k = train_X.shape[0] - 1
-
-    # Compute train accuracy using whole set
-    # print("shape")
-    # print(train_X.shape[0])
 
     predicted_labels = classifier.classify_dataset(train_X, k)
     train_acc = compute_accuracy(predicted_labels, train_Y)
@@ -157,14 +154,49 @@ def run_cross_validation_test(training_file, test_file,mode):
   # SHOULD CALCULATE THIS BASED OFF OF VALIDATION ACCURACY PROBABLY
   # How should we interpret variance in this situation?
 
-  # Sort k values by best validation accuracy - maybe add an arbitrary variance cutoff point?
+  # Sort k values by best validation accuracy - maybe add a variance cutoff factor?
   sorted_k_selection_set = sorted(k_selection_set, key=lambda tup: tup[0], reverse=True)
   best_k = sorted_k_selection_set[0][1]
 
   print("Best K: " + str(best_k))
 
+  # M and L selection section
+  if ( mode == "1" ):
+    # This is where I will put hyperplane and hash table variable selection
+    for m in [2, 4, 6, 8]:
+
+      for l in [1, 2, 3]:
+
+        print(m + l)
+
+        # new_rplsh_classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, m, l)
+
+        # # Not going to include training time for evaluation
+        # t0 = time.time()
+
+        # rplsh_predicted_labels = new_rplsh_classifier.classify_dataset(train_X, best_k)
+        # rplsh_train_acc = compute_accuracy(rplsh_predicted_labels, train_Y)
+
+        # val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
+          
+        # t1 = time.time()
+        # print("k = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(k, train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
+
+        # k_selection_set.append((val_acc, k))
+    print("1")
+
+  # placeholders for later
+  best_m = 4
+  best_l = 1
+
+  if ( mode == "1" ):
+    print("Creating RPLSH classifier with ideal hyperparameters")
+    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, best_m, best_l)
+
   # Make predictions on test set
+  print("Classifying test set . . .")
   pred_test_y = classifier.classify_dataset(test_X, best_k)    
+  print("Test set successfully classified!      test_predicted.csv")
     
   # add index and header then save to file
   test_out = np.concatenate((np.expand_dims(np.array(range(2000),dtype=int), axis=1), pred_test_y), axis=1)
@@ -189,17 +221,16 @@ def run_cross_validation_test(training_file, test_file,mode):
 #   avg_val_acc --      the average validation accuracy across the folds
 #   varr_val_acc --      the variance of validation accuracy across the folds
 ######################################################################
+
 def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
 
   # Split train_X and train_Y into K folds for computation
-  # TODO - CONVERT THIS IN TERMS OF NUM_FOLDS FOR CONTINUITY
+  # CONVERT THIS IN TERMS OF NUM_FOLDS FOR CONTINUITY
   split_X = np.split(train_X, [1999, 3999, 5999])
   split_Y = np.split(train_Y, [1999, 3999, 5999])
 
   # Adjust our k so that it is compatible with K folds
-  # print(k)
   k = ((num_folds - 1) * k // num_folds) - 1
-  # print(k)
 
   accuracy_array = []
 
@@ -221,7 +252,7 @@ def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
     if( mode == "0" ):
       fold_classifier = nn.NearestNeighbor(fold_train_X_combined, fold_train_Y_combined)
     elif (mode == "1"):
-      fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined,4,2)
+      fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined, 4, 2) # should I vary the numbers 4, 2 here?
 
     # Predict from fold test set
     fold_pred = fold_classifier.classify_dataset(fold_test_X, k)  
