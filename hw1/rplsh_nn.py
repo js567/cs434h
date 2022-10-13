@@ -67,15 +67,43 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     #   idx_of_nearest --   a k-by-1 list of indices for the nearest k
     #                       neighbors of the query point
     ######################################################################
+
     def get_nearest_neighbors(self, query, k):
-        print("method successfully overridden")
+        print("method successfully overridden\n")
 
-        print(self.rplsh_functions.get_hash_entries(query))
-        idx_of_nearest = self.rplsh_functions.get_hash_entries(query)[:k] # for now, will update this
+        # print(self.rplsh_functions.get_k_hash_entries(query, k))
+        idx_of_all_nearest = self.rplsh_functions.get_k_hash_entries(query, k) # for now, will update this
 
-        print("idx_of_nearest = " + str(idx_of_nearest))
+        # create a dataset that consists of k neighbors 
+        # if k don't exist in the bucket, go to the next buckets over, and etc.
+        # run super().get_nearest_neighbors or just copy some logic from original implementation
+
+        length_array = []
+
+        for i in range(len(idx_of_all_nearest)):
+            # for j in range(len(idx_of_all_nearest[i])):
+
+                # distance_vector = self.train_X[idx_of_all_nearest[i][j]] - query
+                distance_vector = self.train_X[idx_of_all_nearest[i]] - query
+                length_array.append((np.linalg.norm(distance_vector), idx_of_all_nearest[i]))
+
+        
+        sorted_length_array = sorted(length_array, key=lambda tup: tup[0])
+        print(sorted_length_array)
+
+        idx_of_nearest = []
+
+        if k == len(sorted_length_array): 
+            for item in range(len(sorted_length_array)):
+                idx_of_nearest.append(sorted_length_array[item][1])
+        else:
+            for neighbor in range(k):
+                idx_of_nearest.append(sorted_length_array[neighbor][1])
+
+        print("idx_of_nearest = " + str(idx_of_nearest) + "\n")
         return idx_of_nearest
         
+
 if __name__ == '__main__':
     pass
     

@@ -36,7 +36,10 @@ def sanity_check(training_file, test_file, mode):
   example_train_Y = np.array([[0], [1], [1], [1], [0], [1]])
   # classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
   # Going to run sanity check on RPLSH - should accept same data
-  classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
+  if ( mode == "0" ):
+    classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
+  if ( mode == "1" ):
+    classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
   
   #########
   # Sanity Check 1: If I query with examples from the training set 

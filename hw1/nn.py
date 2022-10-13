@@ -60,20 +60,12 @@ class NearestNeighbor:
         length_array = []
         # timedd = time.time()
         # print("create array: " + str(timedd - timecc))
-
-        # Find vector norm for all entries in adjusted matrix
-        # sorted_length_array = [0] * 20
-
+        
         timee = time.time()
 
         for row in range(adjusted_matrix.shape[0]):
             length_array.append((np.linalg.norm(adjusted_matrix[row]), row))
-            # length = np.linalg.norm(adjusted_matrix[row])
-            # if length > length_array[k-1][0]:
-            #     length_array[k-1] = (length, row)
-            #     length_array = sorted(length_array, key=lambda tup: tup[0])
-
-        # sorted_length_array = length_array
+ 
         # timef = time.time()
         # print("norm: " + str(timef-timee))
 

@@ -1,3 +1,4 @@
+from operator import index
 import numpy as np
 import random
 
@@ -156,9 +157,40 @@ class RPLSH:
 ######################################################################
 
     def get_hash_entries(self, x):
-        
+
         x_hash_code = self.get_hash_code(x)
         return self.hash_table[x_hash_code]
+
+
+    # Similar premise to function above, but this will return k indices and will
+    # pull values from adjacent buckets if needed
+
+    def get_k_hash_entries(self, query, k):
+
+        index_list = []
+        query_hash_code = self.get_hash_code(query) 
+        # index_list = query_hash_code
+
+        # for i in len(self.hash_table[query_hash_code]):
+        index_list = index_list + self.hash_table[query_hash_code]
+
+        print("index list: " + str(index_list))
+
+        j = 1
+        while len(index_list) < k: # not counting individual components here, going to need a change
+            # for i in len(self.hash_table[query_hash_code]):
+            if query_hash_code - j >= 0:
+                for k in range(len(self.hash_table[query_hash_code - j])):
+                    index_list = index_list + [self.hash_table[query_hash_code - j][k]] # these are going to hit the end of indices - what to do about that?
+            if query_hash_code + j < len(self.hash_table):
+                # index_list.append(self.hash_table[query_hash_code + j])
+                for l in range(len(self.hash_table[query_hash_code + j])):
+                    index_list = index_list + [self.hash_table[query_hash_code + j][l]]
+            j += 1
+
+
+        return index_list
+
 
 
 if __name__ == '__main__':
