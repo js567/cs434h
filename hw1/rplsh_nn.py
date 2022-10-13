@@ -43,7 +43,6 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
 
         self.rplsh_functions = rplsh.RPLSH(train_X, train_Y, num_projections, num_hash_tables) 
 
-        self.rplsh_functions.hash_dataset(train_X)
         # might move hyperplane construction to 
         # rplsh because of multiple hash tables being constructed
 
@@ -69,7 +68,7 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     ######################################################################
 
     def get_nearest_neighbors(self, query, k):
-        print("method successfully overridden\n")
+        # print("method successfully overridden\n")
 
         # print(self.rplsh_functions.get_k_hash_entries(query, k))
         idx_of_all_nearest = self.rplsh_functions.get_k_hash_entries(query, k) # for now, will update this
@@ -89,7 +88,7 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
 
         
         sorted_length_array = sorted(length_array, key=lambda tup: tup[0])
-        print(sorted_length_array)
+        # print(sorted_length_array)
 
         idx_of_nearest = []
 
@@ -100,7 +99,7 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
             for neighbor in range(k):
                 idx_of_nearest.append(sorted_length_array[neighbor][1])
 
-        print("idx_of_nearest = " + str(idx_of_nearest) + "\n")
+        # print("idx_of_nearest = " + str(idx_of_nearest) + "\n")
         return idx_of_nearest
         
 

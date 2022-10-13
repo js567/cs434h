@@ -36,10 +36,10 @@ def sanity_check(training_file, test_file, mode):
   example_train_Y = np.array([[0], [1], [1], [1], [0], [1]])
   # classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
   # Going to run sanity check on RPLSH - should accept same data
-  if ( mode == "0" ):
-    classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
-  if ( mode == "1" ):
-    classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
+  # if ( mode == "0" ):
+  classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
+  # if ( mode == "1" ):
+  #   classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
   
   #########
   # Sanity Check 1: If I query with examples from the training set 
@@ -125,7 +125,10 @@ def run_cross_validation_test(training_file, test_file,mode):
   if( mode == "0" ):
     classifier = nn.NearestNeighbor(train_X, train_Y)
   elif (mode == "1"):
-    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 4, 2)
+    # classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 4, 2)
+    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 2, 1) # change this back later when functionality for multiple hash tables is added
+    print("Classifier trained successfully")
+
   else:
     sys.exit("mode must be 0 or 1")
   test_X = np.genfromtxt(test_file, delimiter=',')[1:, 1:]
@@ -138,15 +141,17 @@ def run_cross_validation_test(training_file, test_file,mode):
 
   k_selection_set = []
 
-  for k in [1,3,5,7,9,99,999,8000]:
+  for k in [3]:#[1,3,5,7,9,99,999,8000]:
 
     t0 = time.time()
 
     predicted_labels = classifier.classify_dataset(train_X, k)
     train_acc = compute_accuracy(predicted_labels, train_Y)
+    print("done computing original accuracy")
 
     # Compute 4-fold cross validation accuracy
     val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
+    print("done computing 4-fold")
         
     t1 = time.time()
     print("k = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(k, train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
@@ -189,7 +194,7 @@ def run_cross_validation_test(training_file, test_file,mode):
     print("1")
 
   # placeholders for later
-  best_m = 4
+  best_m = 8
   best_l = 1
 
   if ( mode == "1" ):

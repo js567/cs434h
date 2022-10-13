@@ -19,7 +19,7 @@ class RPLSH:
         self.hash_table = []
 
         # add sufficient np arrays to hash table
-        print("Necessary number of hash buckets: " + str(pow(2, self.num_projections)))
+        # print("Necessary number of hash buckets: " + str(pow(2, self.num_projections)))
         # array_shape = (train_X.shape[1], 1)
         # for i in range(pow(2, num_projections)):
         #     print(i) # garbage
@@ -28,16 +28,19 @@ class RPLSH:
 
         # Fill hash table with enough empty lists (these will be turned into np arrays later)
         self.hash_table = [[] for _ in range(pow(2, self.num_projections))]
-        print(self.hash_table)
+        # print(self.hash_table)
 
         self.hyperplanes = self.generate_hyperplanes()
+
+        self.hash_dataset(train_X)
+
 
     # Need to generate a set of hyperplanes for each hash table
     def generate_hyperplanes(self):
 
         # Hyperplane vectors will have the same length as data vectors
         vector_length = (self.train_X.shape[1])
-        print("Vector length: " + str(vector_length))
+        # print("Vector length: " + str(vector_length))
 
         hyperplanes = []
 
@@ -59,7 +62,7 @@ class RPLSH:
 
             hyperplanes.append(h_hyperplanes)
 
-        print(hyperplanes)
+        # print(hyperplanes)
         return hyperplanes
 
 
@@ -81,6 +84,7 @@ class RPLSH:
     def get_hash_code(self, x):
 
         hashcode = ""
+        int_hashcode = int()
 
         # Getting this to work first for one hash table - CHANGE THIS LATER OR REDESIGN FUNCTION
         if self.num_hash_tables == 1:
@@ -98,7 +102,7 @@ class RPLSH:
 
             # Converting hash code from binary into integer for easy storage in hash table
             int_hashcode = int(hashcode, 2)
-            # print("int hash code: " + str(int_hashcode))
+            print("int hash code: " + str(int_hashcode))
 
         return(int_hashcode)
 
@@ -121,21 +125,24 @@ class RPLSH:
     def hash_dataset(self, dataset):
 
         # For each entry in the dataset, generate hash code and insert into hash table
+        data_shape = dataset.shape[0]
         for index in range(dataset.shape[0]):
             new_hashcode = self.get_hash_code(dataset[index])
-            print()
-            print(dataset[index])
-            print("index: " + str(index))
-            print("hashcode from has_dataset: " + str(new_hashcode))
+            # print()
+            # print(dataset[index])
+            # print("index: " + str(index))
+            # print("hashcode from has_dataset: " + str(new_hashcode))
             self.hash_table[new_hashcode].append(index)#append(dataset[index])
-            print(self.hash_table[new_hashcode])
-            print("\n")
+            # print(self.hash_table[new_hashcode])
+            # print("\n")
+            print(data_shape)
+            data_shape -= 1
         
         # Convert each index of the hash table to a 2D numpy array
         # for i in range(pow(2, self.num_projections)):
         #     self.hash_table[i] = np.array(self.hash_table[i])
 
-        print("hash table ---: " + str(self.hash_table))
+        # print("hash table ---: " + str(self.hash_table))
 
         pass
 
@@ -174,14 +181,14 @@ class RPLSH:
         # for i in len(self.hash_table[query_hash_code]):
         index_list = index_list + self.hash_table[query_hash_code]
 
-        print("index list: " + str(index_list))
+        # print("index list: " + str(index_list))
 
         j = 1
         while len(index_list) < k: # not counting individual components here, going to need a change
             # for i in len(self.hash_table[query_hash_code]):
             if query_hash_code - j >= 0:
-                for k in range(len(self.hash_table[query_hash_code - j])):
-                    index_list = index_list + [self.hash_table[query_hash_code - j][k]] # these are going to hit the end of indices - what to do about that?
+                for n in range(len(self.hash_table[query_hash_code - j])):
+                    index_list = index_list + [self.hash_table[query_hash_code - j][n]] # these are going to hit the end of indices - what to do about that?
             if query_hash_code + j < len(self.hash_table):
                 # index_list.append(self.hash_table[query_hash_code + j])
                 for l in range(len(self.hash_table[query_hash_code + j])):
