@@ -43,8 +43,12 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
 
         self.rplsh_functions = rplsh.RPLSH(train_X, train_Y, num_projections, num_hash_tables) 
 
-        # might move hyperplane construction to 
-        # rplsh because of multiple hash tables being constructed
+        # Extra hash tables will be created with new classifiers, probably not the fastest way but simple
+        # self.extra_classifiers = []
+        # for i in range(num_hash_tables - 1):
+        #     new_classifier = RPLSHNearestNeighbor(self.train_X, self.train_Y, self.num_projections, self.num_hash_tables)
+        #     self.extra_classifiers.append(new_classifier)
+
 
     ######################################################################
     # get_nearest_neighbors 
@@ -68,23 +72,27 @@ class RPLSHNearestNeighbor(nn.NearestNeighbor):
     ######################################################################
 
     def get_nearest_neighbors(self, query, k):
-        # print("method successfully overridden\n")
 
-        # print(self.rplsh_functions.get_k_hash_entries(query, k))
-        idx_of_all_nearest = self.rplsh_functions.get_k_hash_entries(query, k) # for now, will update this
+        # Get at least k neighbors that are approximately close
+        idx_of_all_nearest = self.rplsh_functions.get_kl_hash_entries(query, k, self.num_hash_tables)
 
-        # create a dataset that consists of k neighbors 
-        # if k don't exist in the bucket, go to the next buckets over, and etc.
-        # run super().get_nearest_neighbors or just copy some logic from original implementation
+        # # Special operations for multiple hash tables
+        # if self.num_hash_tables > 1:
+        #     for i in range(len(self.extra_classifiers)):
+        #         # Create a new class with its own hash table and add 
+        #         i_index_of_all_nearest = self.extra_classifiers[i].rplsh_functions.get_k_hash_entries(query, k)
+        #         # Remove redundant items from the list - list comprehension
+        #         [idx_of_all_nearest.append(x) for x in i_index_of_all_nearest if x not in idx_of_all_nearest]
 
         length_array = []
 
+        # Calculate the distance
         for i in range(len(idx_of_all_nearest)):
             # for j in range(len(idx_of_all_nearest[i])):
 
                 # distance_vector = self.train_X[idx_of_all_nearest[i][j]] - query
-                distance_vector = self.train_X[idx_of_all_nearest[i]] - query
-                length_array.append((np.linalg.norm(distance_vector), idx_of_all_nearest[i]))
+            distance_vector = self.train_X[idx_of_all_nearest[i]] - query
+            length_array.append((np.linalg.norm(distance_vector), idx_of_all_nearest[i]))
 
         
         sorted_length_array = sorted(length_array, key=lambda tup: tup[0])

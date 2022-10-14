@@ -13,22 +13,18 @@ class RPLSH:
         self.num_projections = num_projections
         self.num_hash_tables = num_hash_tables
 
-        # self.hash_tables = []
-
         # TEMPORARY - GOING TO DEVELOP USING JUST ONE HASH TABLE
         self.hash_table = []
-
-        # add sufficient np arrays to hash table
-        # print("Necessary number of hash buckets: " + str(pow(2, self.num_projections)))
-        # array_shape = (train_X.shape[1], 1)
-        # for i in range(pow(2, num_projections)):
-        #     print(i) # garbage
-        #     self.hash_table.append(np.zeros(array_shape))
-        # print(self.hash_table)
 
         # Fill hash table with enough empty lists (these will be turned into np arrays later)
         self.hash_table = [[] for _ in range(pow(2, self.num_projections))]
         # print(self.hash_table)
+
+        # create extra hash tables if necessary
+        self.extra_hash_tables = []
+        if self.num_hash_tables > 1:
+            for h in range(num_hash_tables - 1):
+                self.extra_hash_tables.append([[] for _ in range(pow(2, self.num_projections))])
 
         self.hyperplanes = self.generate_hyperplanes()
 
@@ -81,17 +77,18 @@ class RPLSH:
 
     # only going to call this from RPLSH?
     # maybe pass hyperplanes to this function to more quickly insert into hash table
-    def get_hash_code(self, x):
+    def get_hash_code(self, x, hyperplane=0):
 
         hashcode = ""
         int_hashcode = int()
 
         # Getting this to work first for one hash table - CHANGE THIS LATER OR REDESIGN FUNCTION
-        if self.num_hash_tables == 1:
+        # if self.num_hash_tables == 1:
+        for i in range(len(self.hyperplanes)):
             # print("1 hash table")
             hashcode = ""
-            for hyperplane in range(len(self.hyperplanes[0])):
-                dot_product = np.dot(self.hyperplanes[0][hyperplane], x)
+            for hyperplane in range(len(self.hyperplanes[i])):
+                dot_product = np.dot(self.hyperplanes[i][hyperplane], x)
                 # print("Dot Product: " + str(dot_product))
                 if dot_product >= 0: # if point is on 'top' of plane
                     hashcode += "1"
@@ -102,7 +99,7 @@ class RPLSH:
 
             # Converting hash code from binary into integer for easy storage in hash table
             int_hashcode = int(hashcode, 2)
-            print("int hash code: " + str(int_hashcode))
+            # print("int hash code: " + str(int_hashcode))
 
         return(int_hashcode)
 
@@ -125,24 +122,20 @@ class RPLSH:
     def hash_dataset(self, dataset):
 
         # For each entry in the dataset, generate hash code and insert into hash table
-        data_shape = dataset.shape[0]
-        for index in range(dataset.shape[0]):
-            new_hashcode = self.get_hash_code(dataset[index])
-            # print()
+        for i in range(self.num_hash_tables):
+            for index in range(dataset.shape[0]):
+                if i == 0:
+                    new_hashcode = self.get_hash_code(dataset[index])
             # print(dataset[index])
             # print("index: " + str(index))
             # print("hashcode from has_dataset: " + str(new_hashcode))
-            self.hash_table[new_hashcode].append(index)#append(dataset[index])
+                    self.hash_table[new_hashcode].append(index)#append(dataset[index])
             # print(self.hash_table[new_hashcode])
             # print("\n")
-            print(data_shape)
-            data_shape -= 1
-        
-        # Convert each index of the hash table to a 2D numpy array
-        # for i in range(pow(2, self.num_projections)):
-        #     self.hash_table[i] = np.array(self.hash_table[i])
-
-        # print("hash table ---: " + str(self.hash_table))
+            # print(data_shape)
+                else:
+                    new_hashcode = self.get_hash_code(dataset[index], i)
+                    self.extra_hash_tables[i-1].append(index)
 
         pass
 
@@ -172,29 +165,24 @@ class RPLSH:
     # Similar premise to function above, but this will return k indices and will
     # pull values from adjacent buckets if needed
 
-    def get_k_hash_entries(self, query, k):
+    def get_kl_hash_entries(self, query, k, l=1):
 
         index_list = []
         query_hash_code = self.get_hash_code(query) 
-        # index_list = query_hash_code
 
-        # for i in len(self.hash_table[query_hash_code]):
         index_list = index_list + self.hash_table[query_hash_code]
 
         # print("index list: " + str(index_list))
 
         j = 1
-        while len(index_list) < k: # not counting individual components here, going to need a change
-            # for i in len(self.hash_table[query_hash_code]):
+        while len(index_list) < k: 
             if query_hash_code - j >= 0:
                 for n in range(len(self.hash_table[query_hash_code - j])):
-                    index_list = index_list + [self.hash_table[query_hash_code - j][n]] # these are going to hit the end of indices - what to do about that?
+                    index_list = index_list + [self.hash_table[query_hash_code - j][n]]
             if query_hash_code + j < len(self.hash_table):
-                # index_list.append(self.hash_table[query_hash_code + j])
                 for l in range(len(self.hash_table[query_hash_code + j])):
                     index_list = index_list + [self.hash_table[query_hash_code + j][l]]
             j += 1
-
 
         return index_list
 

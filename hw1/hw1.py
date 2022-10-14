@@ -4,6 +4,11 @@ import time
 import nn
 import rplsh_nn
 
+# Using this because of an annoying deprecation warning within numpy
+import warnings
+warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning) 
+
+
 def main(training_file, test_file, mode):
   sanity_check(training_file, test_file, mode)
   run_cross_validation_test(training_file, test_file, mode)
@@ -34,13 +39,8 @@ def sanity_check(training_file, test_file, mode):
   example_train_x = np.array([ [ 1, 0, 2], [3, -2, 4], [5, -2, 4],
                                  [ 4, 2, 1.5], [3.2, np.pi, 2], [-5, 0, 1]])
   example_train_Y = np.array([[0], [1], [1], [1], [0], [1]])
-  # classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
-  # Going to run sanity check on RPLSH - should accept same data
-  # if ( mode == "0" ):
   classifier = nn.NearestNeighbor(example_train_x, example_train_Y)
-  # if ( mode == "1" ):
-  #   classifier = rplsh_nn.RPLSHNearestNeighbor(example_train_x, example_train_Y, 2, 1)
-  
+
   #########
   # Sanity Check 1: If I query with examples from the training set 
   # and k=1, each point should be its own nearest neighbor
@@ -48,9 +48,6 @@ def sanity_check(training_file, test_file, mode):
   for i in range(len(example_train_x)):
 
     assert([i] == classifier.get_nearest_neighbors(example_train_x[i], 1))
-
-  # for i in range(len(example_train_x)):
-  #   print(classifier.get_nearest_neighbors(example_train_x[i], 3))
 
   print("Passed Sanity Check 1")
 
@@ -96,7 +93,7 @@ def sanity_check(training_file, test_file, mode):
   pred_y = np.array([[5],[1],[2],[0],[1],[0]])                    
   assert( compute_accuracy(true_y, pred_y) == 4/6)
 
-  print("Passed Sanity Check 3.2")
+  print("Passed Sanity Check 3.2\n")
 
 ######################################################################
 # run_cross_validation_test
@@ -125,8 +122,7 @@ def run_cross_validation_test(training_file, test_file,mode):
   if( mode == "0" ):
     classifier = nn.NearestNeighbor(train_X, train_Y)
   elif (mode == "1"):
-    # classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 4, 2)
-    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 2, 1) # change this back later when functionality for multiple hash tables is added
+    classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, 6, 1)
     print("Classifier trained successfully")
 
   else:
@@ -137,74 +133,78 @@ def run_cross_validation_test(training_file, test_file,mode):
   # Q3 Hyperparameter Search
   ####################################################################
   # Search over possible settings of k
-  print("Performing 4-fold cross validation")
+  print("Performing 4-fold cross validation\n")
 
   k_selection_set = []
 
-  for k in [3]:#[1,3,5,7,9,99,999,8000]:
+  # Note: 8000 works for both kNN and RPLSH, but it is slow and produces mediocre predictions (all zeros – average label)
+  print("Performing k selection . . .")
+  for k in [1,3,5,7,9,99,999,8000]:
 
     t0 = time.time()
 
     predicted_labels = classifier.classify_dataset(train_X, k)
     train_acc = compute_accuracy(predicted_labels, train_Y)
-    print("done computing original accuracy")
+    # print("done computing original accuracy")
 
     # Compute 4-fold cross validation accuracy
     val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
-    print("done computing 4-fold")
+    # print("done computing 4-fold")
         
     t1 = time.time()
     print("k = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(k, train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
 
     k_selection_set.append((val_acc, k))
-      
-  # TODO set your best k value and then run on the test set
-  # SHOULD CALCULATE THIS BASED OFF OF VALIDATION ACCURACY PROBABLY
-  # How should we interpret variance in this situation?
 
   # Sort k values by best validation accuracy - maybe add a variance cutoff factor?
   sorted_k_selection_set = sorted(k_selection_set, key=lambda tup: tup[0], reverse=True)
   best_k = sorted_k_selection_set[0][1]
 
-  print("Best K: " + str(best_k))
+  print("Best K: " + str(best_k) + "\n")
 
   # M and L selection section
+  ml_selection_set = []
   if ( mode == "1" ):
-    # This is where I will put hyperplane and hash table variable selection
-    for m in [2, 4, 6, 8]:
+    print("Performing M and L selection . . .")
 
-      for l in [1, 2, 3]:
+    # ml_selection_set = []
 
-        print(m + l)
+    for l in [1, 2, 3]:
+      for m in [2, 4, 6, 8]:
+        
+        t0 = time.time()
+        new_rplsh_classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, m, l)
 
-        # new_rplsh_classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, m, l)
-
-        # # Not going to include training time for evaluation
         # t0 = time.time()
 
-        # rplsh_predicted_labels = new_rplsh_classifier.classify_dataset(train_X, best_k)
-        # rplsh_train_acc = compute_accuracy(rplsh_predicted_labels, train_Y)
+        rplsh_predicted_labels = new_rplsh_classifier.classify_dataset(train_X, best_k)
+        rplsh_train_acc = compute_accuracy(rplsh_predicted_labels, train_Y)
 
-        # val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, k)
-          
-        # t1 = time.time()
-        # print("k = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(k, train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
+        val_acc, val_acc_var = cross_validation(mode, train_X, train_Y, 4, best_k, m, l)
+            
+        t1 = time.time()
+        print("m = {:5d}, l = {:5d} -- train acc = {:.2f}%  val acc = {:.2f}% ({:.4f})\t\t[exe_time = {:.2f}]".format(m, l, rplsh_train_acc*100, val_acc*100, val_acc_var*100, t1-t0))
 
-        # k_selection_set.append((val_acc, k))
-    print("1")
+        ml_selection_set.append((val_acc, m, l))
 
-  # placeholders for later
-  best_m = 8
-  best_l = 1
+    sorted_ml_selection_set = sorted(ml_selection_set, key=lambda tup: tup[0], reverse=True)
+    best_m = sorted_ml_selection_set[0][1]
+    best_l = sorted_ml_selection_set[0][2]
 
-  if ( mode == "1" ):
+    print("Best M: " + str(best_m))
+    print("Best L: " + str(best_l))
+
     print("Creating RPLSH classifier with ideal hyperparameters")
+    # This could use the one that was already created to save time
     classifier = rplsh_nn.RPLSHNearestNeighbor(train_X, train_Y, best_m, best_l)
 
   # Make predictions on test set
   print("Classifying test set . . .")
+  test_time = time.time()
   pred_test_y = classifier.classify_dataset(test_X, best_k)    
-  print("Test set successfully classified!      test_predicted.csv")
+  post_time = time.time()
+  diff_time = post_time - test_time
+  print("Test set successfully classified in {:.2f}s!      test_predicted.csv".format(diff_time))
     
   # add index and header then save to file
   test_out = np.concatenate((np.expand_dims(np.array(range(2000),dtype=int), axis=1), pred_test_y), axis=1)
@@ -230,7 +230,7 @@ def run_cross_validation_test(training_file, test_file,mode):
 #   varr_val_acc --      the variance of validation accuracy across the folds
 ######################################################################
 
-def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
+def cross_validation(mode, train_X, train_Y, num_folds=4, k=1, m=4, l=1):
 
   # Split train_X and train_Y into K folds for computation
   # CONVERT THIS IN TERMS OF NUM_FOLDS FOR CONTINUITY
@@ -260,7 +260,7 @@ def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
     if( mode == "0" ):
       fold_classifier = nn.NearestNeighbor(fold_train_X_combined, fold_train_Y_combined)
     elif (mode == "1"):
-      fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined, 4, 2) # should I vary the numbers 4, 2 here?
+      fold_classifier = rplsh_nn.RPLSHNearestNeighbor(fold_train_X_combined, fold_train_Y_combined, m, l) # should I vary the numbers 4, 2 here?
 
     # Predict from fold test set
     fold_pred = fold_classifier.classify_dataset(fold_test_X, k)  
@@ -273,7 +273,7 @@ def cross_validation(mode, train_X, train_Y, num_folds=4, k=1):
   avg_val_acc = np.average(accuracy_array)
   varr_val_acc = np.var(accuracy_array)
 
-  print("k-fold accuracies: " + str(accuracy_array))
+  # print("k-fold accuracies: " + str(accuracy_array))
 
   return(avg_val_acc, varr_val_acc)
 
