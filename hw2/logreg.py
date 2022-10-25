@@ -37,7 +37,8 @@ def main(train_file,test_file):
   logging.info("\n---------------------------------------------------------------------------\n")
 
   t0 = time.time()
-  w_SGD, losses_SGD = trainSGDLogistic(X_train_with_bias,y_train,max_iters=10,STEP_SIZE)
+  max_iters = 10
+  w_SGD, losses_SGD = trainSGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE)
   y_pred_train = X_train_with_bias@w_SGD >= 0
   t1 = time.time()
   logging.info("Training SGD logistic regression model")
@@ -47,7 +48,8 @@ def main(train_file,test_file):
   
   logging.info("\n---------------------------------------------------------------------------\n")
   t0 = time.time()
-  w_MBGD, losses_MBGD = trainMiniBatchGDLogistic(X_train_with_bias,y_train,max_iters=100,STEP_SIZE)
+  max_iters = 100
+  w_MBGD, losses_MBGD = trainMiniBatchGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE)
   y_pred_train = X_train_with_bias@w_MBGD >= 0
   t1 = time.time()
   
@@ -89,8 +91,8 @@ def main(train_file,test_file):
 ######################################################################
 def dummyAugment(X):
   # raise Exception('Student error: You haven\'t implemented dummyAugment yet.')
-  ones = np.ones(len(X), 1)
-  aug_X = np.hstack(ones, X)
+  ones = np.ones((len(X), 1))
+  aug_X = np.hstack((ones, X))
   return aug_X
  
 ######################################################################
