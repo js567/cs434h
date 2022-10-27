@@ -36,19 +36,9 @@ def main(train_file,test_file):
   logging.info("Elapsed time = {:2f}".format(t1-t0))
   logging.info("\n---------------------------------------------------------------------------\n")
 
-  # plt.figure(figsize=(16,9))
-  # plt.plot(range(len(losses)), losses, label="Batch Gradient Descent")
-  # plt.plot(range(len(losses_SGD)), losses_SGD, label="Stochastic Gradient Descent")
-  # plt.plot(range(len(losses_MBGD)), losses_MBGD, label="Minibatch Gradient Descent")
-  # plt.title("Logistic Regression Training Curve")
-  # plt.xlabel("Epoch")
-  # plt.ylabel("Negative Log Likelihood")
-  # plt.legend()
-  # plt.show()
-
   t0 = time.time()
-  max_iters = 10
-  w_SGD, losses_SGD = trainSGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE)
+  max_iters = 100
+  w_SGD, losses_SGD = trainSGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE*500)
   y_pred_train = X_train_with_bias@w_SGD >= 0
   t1 = time.time()
   logging.info("Training SGD logistic regression model")
@@ -57,9 +47,20 @@ def main(train_file,test_file):
   logging.info("Elapsed time = {:2f}".format(t1-t0))
   
   logging.info("\n---------------------------------------------------------------------------\n")
+
+  # plt.figure(figsize=(16,9))
+  # plt.plot(range(len(losses)), losses, label="Batch Gradient Descent")
+  # plt.plot(range(len(losses_SGD)), losses_SGD, label="Stochastic Gradient Descent")
+  # # plt.plot(range(len(losses_MBGD)), losses_MBGD, label="Minibatch Gradient Descent")
+  # plt.title("Logistic Regression Training Curve")
+  # plt.xlabel("Epoch")
+  # plt.ylabel("Negative Log Likelihood")
+  # plt.legend()
+  # plt.show()
+
   t0 = time.time()
-  max_iters = 100
-  w_MBGD, losses_MBGD = trainMiniBatchGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE)
+  max_iters = 200
+  w_MBGD, losses_MBGD = trainMiniBatchGDLogistic(X_train_with_bias,y_train,max_iters,STEP_SIZE*50)
   y_pred_train = X_train_with_bias@w_MBGD >= 0
   t1 = time.time()
   
@@ -193,47 +194,113 @@ def calculateNegativeLogLikelihood(X,y,w):
 #   losses -- a list of negative log-likelihood values for each iteration
 ######################################################################
 def trainLogistic(X,y, max_iters, step_size):
-    # Initialize our weights with zeros
-    w = np.zeros( (X.shape[1],1) )
+  # Initialize our weights with zeros
+  w = np.zeros( (X.shape[1],1) )
+  
+  # Keep track of losses for plotting
+  losses = [calculateNegativeLogLikelihood(X,y,w)]
+  
+  # Take up to max_iters steps of gradient descent
+  for i in range(max_iters):
+
+    # Make a variable to store our gradient
+    w_grad = np.zeros( (X.shape[1],1) )
+
+    # Compute the gradient over the dataset and store in w_grad
+    # This uses the matrix gradient equation (#6)
+    # weighted_X = X @ w
+    # logit_wx = logistic(weighted_X)
+    w_grad = np.transpose(X) @ (logistic(X @ w) - y)
+            
+    # This is here to make sure your gradient is the right shape
+    assert(w_grad.shape == (X.shape[1],1))
+
+    # Take the update step in gradient descent
+    w = w - step_size * w_grad 
     
-    # Keep track of losses for plotting
-    losses = [calculateNegativeLogLikelihood(X,y,w)]
+    # Calculate the negative log-likelihood with the 
+    # new weight vector and store it for plotting later
+    losses.append(calculateNegativeLogLikelihood(X,y,w))
     
-    # Take up to max_iters steps of gradient descent
-    for i in range(max_iters):
-
-        # Make a variable to store our gradient
-        w_grad = np.zeros( (X.shape[1],1) )
-
-        # Compute the gradient over the dataset and store in w_grad
-        weighted_X = X @ w
-        logit_wx = logistic(weighted_X)
-        w_grad = np.transpose(X) @ (logit_wx - y)#second_term
-               
-        # This is here to make sure your gradient is the right shape
-        assert(w_grad.shape == (X.shape[1],1))
-
-        # Take the update step in gradient descent
-        w = w - step_size*w_grad 
-        
-        # Calculate the negative log-likelihood with the 
-        # new weight vector and store it for plotting later
-        losses.append(calculateNegativeLogLikelihood(X,y,w))
-        
-    return w, losses
+  return w, losses
 
 ######################################################################
 # trainSGDLogistic
 ######################################################################
 def trainSGDLogistic(X,y, max_iters, step_size):
-  raise Exception('Student error: You haven\'t implemented the trainSGDLogistic function yet.')
+  # raise Exception('Student error: You haven\'t implemented the trainSGDLogistic function yet.')
+  # Initialize our weights with zeros
+  w = np.zeros( (X.shape[1],1) )
+    
+  # Keep track of losses for plotting
+  losses = [calculateNegativeLogLikelihood(X,y,w)]
+
+  index_array = np.arange(0, X.shape[0])
+  # print(index_array)
+    
+  # Take up to max_iters steps of gradient descent
+  for i in range(max_iters):
+
+    decreasing_step_size = step_size / (i + 1)
+    
+    # Shuffle dataset - combine y before shuffling
+    np.random.shuffle(index_array)
+
+    for j in index_array:#range(len(X)):
+      # Make a variable to store our gradient
+      w_grad = np.zeros( (X.shape[1],1) )
+
+      w_grad = (logistic(np.transpose(w) @ X[j]) - y[j]) * X[j]
+      w_grad = np.reshape(w_grad, (X.shape[1], 1))
+              
+      # This is here to make sure your gradient is the right shape
+      assert(w_grad.shape == (X.shape[1],1))
+
+      # Take the update step in gradient descent
+      w = w - decreasing_step_size * w_grad 
+      
+    # Calculate the negative log-likelihood with the 
+    # new weight vector and store it for plotting later
+    losses.append(calculateNegativeLogLikelihood(X,y,w))
+
   return w, losses
 
 ######################################################################
 # trainMiniBatchGDLogistic
 ######################################################################
 def trainMiniBatchGDLogistic(X,y, max_iters, step_size):
-  raise Exception('Student error: You haven\'t implemented the trainMiniBatchLogistic function yet.')
+  # raise Exception('Student error: You haven\'t implemented the trainMiniBatchLogistic function yet.')
+  # Initialize our weights with zeros
+  w = np.zeros( (X.shape[1],1) )
+  
+  # Keep track of losses for plotting
+  losses = [calculateNegativeLogLikelihood(X,y,w)]
+
+  split_X = np.array_split(X, 5)
+  split_y = np.array_split(y, 5)
+  
+  # Take up to max_iters steps of gradient descent
+  for i in range(max_iters):
+
+    decreasing_step_size = step_size / (i + 1)
+
+    for j in range(len(split_X)):
+
+      w_grad = np.zeros( (X.shape[1],1) )
+
+      w_grad = np.transpose(split_X[j]) @ (logistic(split_X[j] @ w) - split_y[j])
+              
+      # This is here to make sure your gradient is the right shape
+      assert(w_grad.shape == (X.shape[1],1))
+
+      # Take the update step in gradient descent
+      w = w - decreasing_step_size * w_grad 
+    
+      # Calculate the negative log-likelihood with the 
+      # new weight vector and store it for plotting later
+    
+      losses.append(calculateNegativeLogLikelihood(X,y,w))
+
   return w, losses
 
 ##################################################################
