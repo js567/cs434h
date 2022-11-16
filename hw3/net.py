@@ -20,8 +20,8 @@ max_epochs = 200
 
 # GLOBAL PARAMETERS FOR NETWORK ARCHITECTURE
 number_of_layers = 5
-width_of_layers = 16  # only matters if number of layers > 1
-activation = "ReLU"#"Sigmoid"#"ReLU" if False else "Sigmoid" 
+width_of_layers = 100  # only matters if number of layers > 1
+activation = "ReLU" if False else "Sigmoid" 
 
 def main():
 
@@ -121,8 +121,16 @@ def main():
   ################################
   # Q7 Evaluate on Test
   ################################
-  raise Exception('Student error: You haven\'t implemented evaluating the test set yet.')
+  # raise Exception('Student error: You haven\'t implemented evaluating the test set yet.')
+  print(net.forward(X_test)[0])
+  likely_number = np.argmax(net.forward(X_test)[0])
+  print(likely_number)
+  test_results = net.forward(X_test)
+  header = np.array([["id", "digit"]])
+  for i in range(len(test_results)):
+    header = np.vstack([header, [i, np.argmax(test_results[i])]])
 
+  np.savetxt('mnist_test_results.csv', header, fmt='%s', delimiter=',')
 
 
 class LinearLayer:
