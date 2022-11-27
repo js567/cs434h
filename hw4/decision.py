@@ -1,6 +1,7 @@
 # We are going to cheat a little here and use a package for the dataset and decision trees. Thats why this isn't considered an implementation question.
 from sklearn import tree
 from sklearn.datasets import load_breast_cancer
+from sklearn.ensemble import BaggingClassifier
 import numpy as np
 import matplotlib.pyplot as plt
 np.random.seed(402)
@@ -41,6 +42,8 @@ for m in range(M):
 
 
   #Fit the model and store it's predictions
+  # clf = tree.DecisionTreeClassifier(criterion="entropy", max_features=10)
+  # clf = BaggingClassifier(base_estimator=clf, n_estimators=100)
   clf = tree.DecisionTreeClassifier(criterion="entropy")
   clf = clf.fit(X_data, y_data)
   preds[:,m]= clf.predict(X_test)
