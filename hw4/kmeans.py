@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 
 
 # Toy problem with 3 clusters for us to verify k-means is working well
@@ -16,7 +17,7 @@ def toyProblem():
   # Apply kMeans with visualization on
   k = 3
   max_iters=20
-  centroids, assignments, SSE = kMeansClustering(X, k=k, max_iters=max_iters, visualize=True, smartInitialization=False)
+  centroids, assignments, SSE = kMeansClustering(X, k=k, max_iters=max_iters, visualize=False, smartInitialization=False)
   plotClustering(centroids, assignments, X, title="Final Clustering")
   
   # Print a plot of the SSE over training
@@ -36,8 +37,12 @@ def toyProblem():
   SSE_rand = []
   # Run the clustering with k=5 and max_iters=20 fifty times and 
   # store the final sum-of-squared-error for each run in the list SSE_rand.
-  raise Exception('Student error: You haven\'t implemented the randomness experiment for Q5.')
+  # raise Exception('Student error: You haven\'t implemented the randomness experiment for Q5.')
   
+  for i in range(50):
+    centroids, assignments, SSE = kMeansClustering(X, k=k, max_iters=max_iters, visualize=False, smartInitialization=False)
+    SSE_rand.append(SSE[0])
+
   # Plot error distribution
   plt.figure(figsize=(8,8))
   plt.hist(SSE_rand, bins=20)
@@ -52,7 +57,10 @@ def toyProblem():
   SSE_vs_k = []
   # Run the clustering max_iters=20 for k in the range 1 to 150 and 
   # store the final sum-of-squared-error for each run in the list SSE_vs_k.
-  raise Exception('Student error: You haven\'t implemented the randomness experiment for Q5.')
+
+  for k in range(1, 150):
+    centroids, assignments, SSE = kMeansClustering(X, k, max_iters=20, visualize=False, smartInitialization=False)
+    SSE_vs_k.append(SSE[0])
 
   # Plot how SSE changes as k increases
   plt.figure(figsize=(16,8))
@@ -64,7 +72,8 @@ def toyProblem():
   ####################################
   # Smart initialization 
   ####################################
-  centroids, assignments, SSE = kMeansClustering(X, k=k, max_iters=max_iters, visualize=True, smartInitialization=True)
+  centroids, assignments, SSE = kMeansClustering(X, k=3, max_iters=max_iters, visualize=False, smartInitialization=True)
+  # centroids, assignments, SSE = kMeansClustering(X, k=5, max_iters=max_iters, visualize=True, smartInitialization=True)
   plotClustering(centroids, assignments, X, title="Final Clustering")
   
   # Print a plot of the SSE over training
@@ -83,7 +92,7 @@ def imageProblem():
 
 
   # Perform k-means clustering
-  k=10
+  k=4
   centroids, assignments, SSE = kMeansClustering(img_feats, k, 30, min_size=0, smartInitialization=True)
 
   # Visualize Clusters
@@ -135,8 +144,55 @@ def imageProblem():
 # iterative furthest-from centroids heuristic
 ##########################################################
 def smartInitializeCentroids(dataset, k):
-  raise Exception('Student error: You haven\'t implemented the smart initialization for Q6.')
+
+  # n is the original number of points in the dataset
+  n = dataset.shape[0]
+
+  # First centroid is a random point from the dataset
+  first_centroid_index = random.randrange(n)
+  # print(first_centroid_index)
+  centroids = np.array([dataset[first_centroid_index]])
+
+  # Remove new centroid from current dataset
+  remaining_points = dataset
+  np.delete(remaining_points, first_centroid_index, 0)
+
+  eucli_dist = np.linalg.norm(remaining_points - centroids[0], axis=1).reshape((dataset.shape[0], 1))
+
+  # total_distance = np.zeros((150, 1))
+
+  # For every new centroid:
+  for i in range(0, k-1):
+    
+    eucli_dist += np.linalg.norm(remaining_points - centroids[i], axis=1).reshape((dataset.shape[0], 1))
+    new_centroid_index = np.argmax(eucli_dist)
+    new_centroid = np.array([dataset[new_centroid_index]])
+    np.append(centroids, new_centroid)
+    centroids = np.vstack((centroids, new_centroid))
+    np.delete(eucli_dist, new_centroid_index, 0)
+
   return centroids
+
+  #   for j in range(len(centroids)):
+
+  #     # Compute distance from all points to the first centroid
+  #     eucli_dist = np.linalg.norm(dataset - centroids[0], axis=1).reshape((dataset.shape[0], 1))
+
+  # for index in range(1, centroids.shape[0]):
+  #   # Add a vector containing a new set of centroid distances for every centroid
+  #   eucli_dist = np.hstack((eucli_dist, np.linalg.norm(dataset - centroids[index], axis=1).reshape((dataset.shape[0], 1))))
+
+  # # After all distances are computed, find the argmin indices for each point
+  # assignments = np.argmin(eucli_dist, axis=1)
+
+      
+  # Sample k random indices and select the corresponding points to use as centroids
+  # indices = random.sample(range(0, n), k)
+  # centroids = dataset[indices[0]]
+
+    # Add remaining centroids to centroid array
+  # for index in range(1, k):
+  #   centroids = np.vstack((centroids, dataset[indices[index]]))
 
 ##########################################################
 # initializeCentroids
@@ -155,10 +211,21 @@ def smartInitializeCentroids(dataset, k):
 ##########################################################
 
 def initializeCentroids(dataset, k, smartInitialization=False):
+
   if smartInitialization:
-      return smartInitializeCentroids(dataset, k)
+    return smartInitializeCentroids(dataset, k)
+
   else:
-    raise Exception('Student error: You haven\'t implemented initializeCentroids yet for Q3.')
+    n = dataset.shape[0]
+
+    # Sample k random indices and select the corresponding points to use as centroids
+    indices = random.sample(range(0, n), k)
+    centroids = dataset[indices[0]]
+
+    # Add remaining centroids to centroid array
+    for index in range(1, k):
+      centroids = np.vstack((centroids, dataset[indices[index]]))
+
     return centroids
 
 ##########################################################
@@ -177,7 +244,17 @@ def initializeCentroids(dataset, k, smartInitialization=False):
 ##########################################################
 
 def computeAssignments(dataset, centroids):
-  raise Exception('Student error: You haven\'t implemented computeAssignments yet for Q3.')
+
+  # Compute distance from all points to the first centroid
+  eucli_dist = np.linalg.norm(dataset - centroids[0], axis=1).reshape((dataset.shape[0], 1))
+
+  for index in range(1, centroids.shape[0]):
+    # Add a vector containing a new set of centroid distances for every centroid
+    eucli_dist = np.hstack((eucli_dist, np.linalg.norm(dataset - centroids[index], axis=1).reshape((dataset.shape[0], 1))))
+
+  # After all distances are computed, find the argmin indices for each point
+  assignments = np.argmin(eucli_dist, axis=1)
+
   return assignments
 
 
@@ -201,8 +278,34 @@ def computeAssignments(dataset, centroids):
 ##########################################################
 
 def updateCentroids(dataset, centroids, assignments):
-  raise Exception('Student error: You haven\'t implemented updateCentroids yet for Q3.')
-  return centroids , counts
+
+  new_centroids = []
+
+  for index in range(centroids.shape[0]):
+    # Reduce indices to those matching the current centroid
+    assignment_indices = np.where(assignments == index)
+
+    # Select the according datapoints from the dataset
+    assignment_array = dataset[assignment_indices]
+
+    # Calculate the mean of this array and make a new centroid at this value
+    mean_value = np.mean(assignment_array, axis=0)
+    new_centroids.append(mean_value)
+
+  centroids = np.array(new_centroids)
+
+  # Reassess the dataset based on new centroids
+  assignments = computeAssignments(dataset, centroids)
+
+  counts = []
+
+  # Count the number of values in the new assignments array that match each centroid
+  for index in range(centroids.shape[0]):
+    counts.append(np.count_nonzero(assignments == index))
+
+  counts = np.array(counts)
+
+  return centroids, counts
 
 ##########################################################
 # calculateSSE
@@ -220,7 +323,22 @@ def updateCentroids(dataset, centroids, assignments):
 ##########################################################
 
 def calculateSSE(dataset, centroids, assignments):
-  raise Exception('Student error: You haven\'t implemented calculateSSE yet for Q3.')
+
+  sse = 0
+
+  for index in range(centroids.shape[0]):
+    # Reduce indices to those matching the current centroid
+    assignment_indices = np.where(assignments == index)
+
+    # Select the according datapoints from the dataset
+    assignment_array = dataset[assignment_indices]
+
+    # Find the distance between each point and the centroid
+    eucli_dist = np.linalg.norm(assignment_array - centroids[index], axis=1).reshape((assignment_array.shape[0], 1))
+
+    # Sum these distances and add to SSE
+    sse += np.sum(eucli_dist, axis=0)
+
   return sse
   
 
