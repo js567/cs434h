@@ -412,5 +412,5 @@ def plotClustering(centroids, assignments, dataset, title=None):
 
 
 if __name__=="__main__":
-  # toyProblem()
+  toyProblem()
   imageProblem()
